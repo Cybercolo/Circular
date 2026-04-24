@@ -4,7 +4,7 @@ export const uiText = {
     alternateLocaleLabel: 'EN',
     nav: {
       explore: 'Explorar círculos',
-      becomeGuide: 'Conviértete en guía',
+      becomeGuide: 'Soy guía',
       login: 'Ingresar',
       profile: 'Perfil',
       dashboard: 'Panel guía',
@@ -14,14 +14,9 @@ export const uiText = {
       eyebrow: 'Círculos guiados para crecer acompañadas',
       title: 'Encuentra un círculo de mujeres que te sostenga, inspire y conecte contigo.',
       description:
-        'Circular reúne experiencias íntimas y profesionales de sanación, creatividad y espiritualidad en un entorno cálido, moderno y confiable.',
+        'Circular es una herramientas para que guias y mujeres se encuentren y reunan al rededor de circulos femeninos',
       primaryCta: 'Explorar círculos',
       secondaryCta: 'Conoce a las guías',
-      stats: [
-        'Guías con experiencia real',
-        'Espacios seguros y cuidados',
-        'Encuentros presenciales y humanos',
-      ],
     },
     search: {
       title: 'Descubre tu próximo círculo',
@@ -66,12 +61,17 @@ export const uiText = {
     },
     guide: {
       title: 'Conoce a tu guía',
+      directoryEyebrow: 'Guías en Circular',
+      directoryTitle: 'Explora a todas las guías inscritas',
+      directoryDescription:
+        'Descubre sus historias, experiencia y los círculos que ya están compartiendo dentro de la plataforma.',
       story: 'Cómo se convirtió en guía de círculos',
       experience: 'Experiencia',
       special: 'Qué hace especiales sus círculos',
       reviews: 'Reseñas',
       circles: 'Círculos de esta guía',
       rating: 'Calificación',
+      viewProfile: 'Ver perfil',
     },
     auth: {
       title: 'Bienvenida a Circular',
@@ -109,7 +109,8 @@ export const uiText = {
       contact: 'Contacto',
       requestsSummary: 'Revisa quién quiere sumarse a cada círculo.',
       description: 'Descripción breve',
-      imageUrl: 'URL de imagen',
+      imageUpload: 'Subir imagen del círculo',
+      imageHelp: 'Formatos permitidos: PNG, JPG, JPEG o WEBP.',
       noGuide:
         'Esta sección está disponible para cuentas guía. Crea una cuenta guía o inicia sesión con una existente.',
       success: 'Tu nuevo círculo ya está publicado en Circular.',
@@ -118,6 +119,7 @@ export const uiText = {
       title: 'Tu perfil',
       upcoming: 'Tus próximas reservas',
       noReservations: 'Aún no tienes reservas registradas.',
+      viewEvent: 'Ver evento',
       roleLabels: {
         participant: 'Participante',
         guide: 'Guía',
@@ -135,14 +137,12 @@ export const uiText = {
       cta: 'Crear cuenta guía',
     },
     footer:
-      'Circular es una plataforma pensada para encuentros femeninos con calidez, claridad y sentido de comunidad.',
+    'Para contacto o problemas técnicos: contacto.circular@gmail.com',
     donation: {
       title: 'Apoya a Circular',
       description:
-        'Circular está sostenido por una sola persona que diseña, mantiene y cuida este sitio web. Si este proyecto resuena contigo, tu aporte ayuda directamente a mantenerlo vivo.',
-      onePersonNote: 'Este sitio es sostenido por una sola persona.',
+        'Hola, yo soy Coni, cree y mantengo circular para facilitar el encuentro de mujeres en círculos. Si este proyecto resuena contigo, haz un aporte y ayuda a mantener este proyecto vivo.',
       cta: 'Donar con PayPal',
-      note: 'Tu donación apoya directamente el tiempo, mantenimiento y continuidad de este espacio.',
     },
   },
   en: {
@@ -150,7 +150,7 @@ export const uiText = {
     alternateLocaleLabel: 'ES',
     nav: {
       explore: 'Explore circles',
-      becomeGuide: 'Become a guide',
+      becomeGuide: 'Be a guide',
       login: 'Login',
       profile: 'Profile',
       dashboard: 'Guide dashboard',
@@ -163,11 +163,6 @@ export const uiText = {
         'Circular brings together intimate, professionally guided experiences around healing, creativity, spirituality, and meaningful connection.',
       primaryCta: 'Explore circles',
       secondaryCta: 'Meet the guides',
-      stats: [
-        'Experienced guides',
-        'Safe and caring spaces',
-        'In-person, human-centered gatherings',
-      ],
     },
     search: {
       title: 'Discover your next circle',
@@ -212,12 +207,17 @@ export const uiText = {
     },
     guide: {
       title: 'Meet your guide',
+      directoryEyebrow: 'Guides on Circular',
+      directoryTitle: 'Explore every guide on the platform',
+      directoryDescription:
+        'Discover their stories, experience, and the circles they are already sharing through Circular.',
       story: 'How she became a circle guide',
       experience: 'Experience',
       special: 'What makes her circles special',
       reviews: 'Reviews',
       circles: 'Circles by this guide',
       rating: 'Rating',
+      viewProfile: 'View profile',
     },
     auth: {
       title: 'Welcome to Circular',
@@ -255,7 +255,8 @@ export const uiText = {
       contact: 'Contact',
       requestsSummary: 'Review who wants to join each circle.',
       description: 'Short description',
-      imageUrl: 'Image URL',
+      imageUpload: 'Upload circle image',
+      imageHelp: 'Allowed formats: PNG, JPG, JPEG, or WEBP.',
       noGuide:
         'This area is available for guide accounts. Create a guide account or log in with one.',
       success: 'Your new circle is now published on Circular.',
@@ -264,6 +265,7 @@ export const uiText = {
       title: 'Your profile',
       upcoming: 'Your upcoming bookings',
       noReservations: 'You do not have any bookings yet.',
+      viewEvent: 'View event',
       roleLabels: {
         participant: 'Participant',
         guide: 'Guide',
@@ -281,14 +283,12 @@ export const uiText = {
       cta: 'Create guide account',
     },
     footer:
-      'Circular is a platform designed for women-centered gatherings with warmth, clarity, and a strong sense of community.',
+      'For contact or technical issues: contact.circular@gmail.com',
     donation: {
       title: 'Support Circular',
       description:
-        'Circular is sustained by one person who designs, maintains, and cares for this website. If this project resonates with you, your support helps keep it alive.',
-      onePersonNote: 'This website is sustained by one person.',
+        'Hi my name is Coni, I created and maintain Circular to facilitate the finding of women in circles. If this project resonates with you, make a donation and help keep this project alive.',
       cta: 'Donate with PayPal',
-      note: 'Your donation directly supports the time, maintenance, and continuity of this space.',
     },
   },
 }

@@ -44,9 +44,15 @@ function ProfilePage({ content, currentUser, registrations, circles }) {
                 <p className="small text-muted mb-1">
                   {registration.circle.date} · {registration.circle.time}
                 </p>
-                <p className="small mb-0">
+                <p className="small mb-3">
                   {registration.circle.region} · {registration.circle.comuna}
                 </p>
+                <Link
+                  className="btn circular-btn-primary rounded-pill px-3 py-2"
+                  to={`/circulos/${registration.circle.id}`}
+                >
+                  {content.profile.viewEvent}
+                </Link>
               </div>
             ))}
           </div>

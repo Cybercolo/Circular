@@ -13,6 +13,15 @@ const emptyForm = {
   image: '',
 }
 
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = () => reject(new Error('No se pudo leer la imagen'))
+    reader.readAsDataURL(file)
+  })
+}
+
 function GuideDashboardPage({
   content,
   currentUser,
@@ -22,6 +31,7 @@ function GuideDashboardPage({
 }) {
   const [formData, setFormData] = useState(emptyForm)
   const [created, setCreated] = useState(false)
+  const [fileInputKey, setFileInputKey] = useState(0)
 
   if (currentUser?.role !== 'guide') {
     return (
@@ -41,11 +51,24 @@ function GuideDashboardPage({
     }))
   }
 
+  const handleImageChange = async (event) => {
+    const file = event.target.files?.[0]
+
+    if (!file) {
+      handleChange('image', '')
+      return
+    }
+
+    const imageData = await readFileAsDataUrl(file)
+    handleChange('image', imageData)
+  }
+
   const handleSubmit = (event) => {
     event.preventDefault()
     onCreateCircle(formData)
     setCreated(true)
     setFormData(emptyForm)
+    setFileInputKey((currentKey) => currentKey + 1)
   }
 
   const requestsByCircle = guideCircles.map((circle) => ({
@@ -183,15 +206,26 @@ function GuideDashboardPage({
                 />
               </div>
               <div className="col-12">
-                <label className="form-label">{content.dashboard.imageUrl}</label>
+                <label className="form-label">{content.dashboard.imageUpload}</label>
                 <input
+                  key={fileInputKey}
                   required
-                  type="url"
+                  type="file"
+                  accept="image/*"
                   className="form-control circular-input"
-                  value={formData.image}
-                  onChange={(event) => handleChange('image', event.target.value)}
+                  onChange={handleImageChange}
                 />
+                <div className="form-text">{content.dashboard.imageHelp}</div>
               </div>
+              {formData.image && (
+                <div className="col-12">
+                  <img
+                    src={formData.image}
+                    alt={formData.title || 'Vista previa del círculo'}
+                    className="detail-image rounded-4 dashboard-image-preview"
+                  />
+                </div>
+              )}
               <div className="col-12">
                 <button className="btn circular-btn-primary rounded-pill px-4 py-3" type="submit">
                   {content.dashboard.create}

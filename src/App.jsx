@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Footer from './components/Footer'
+import FloatingFlowerDecoration from './components/FloatingFlowerDecoration'
 import Navbar from './components/Navbar'
 import AuthPage from './pages/AuthPage'
 import BecomeGuidePage from './pages/BecomeGuidePage'
@@ -8,6 +9,7 @@ import CircleDetailPage from './pages/CircleDetailPage'
 import ExplorePage from './pages/ExplorePage'
 import GuideDashboardPage from './pages/GuideDashboardPage'
 import GuideProfilePage from './pages/GuideProfilePage'
+import GuidesPage from './pages/GuidesPage'
 import HomePage from './pages/HomePage'
 import ProfilePage from './pages/ProfilePage'
 import { uiText } from './services/content'
@@ -374,6 +376,10 @@ function App() {
             }
           />
           <Route
+            path="/guias"
+            element={<GuidesPage content={content} guides={guides} circles={enrichedCircles} />}
+          />
+          <Route
             path="/guias/:guideId"
             element={<GuideProfilePage content={content} guides={guides} circles={enrichedCircles} />}
           />
@@ -409,6 +415,7 @@ function App() {
         </Routes>
       </main>
 
+      <FloatingFlowerDecoration />
       <Footer content={content} donationUrl={paypalDonationUrl} />
     </div>
   )
