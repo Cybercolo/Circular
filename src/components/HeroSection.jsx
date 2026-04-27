@@ -4,9 +4,13 @@ function HeroSection({ content }) {
   return (
     <section className="hero-shell py-5 py-lg-6">
       <div className="container">
-        <div className="position-relative overflow-hidden p-4 p-lg-5">
-          <div className="row align-items-center g-4">
-            <div className="col-lg-7">
+        <div className="hero-card position-relative overflow-hidden p-4 p-lg-5">
+          <div className="hero-background" aria-hidden="true">
+            <img src="/hero-hands.png" alt="" className="hero-background-image" />
+          </div>
+
+          <div className="row align-items-center g-4 position-relative">
+            <div className="col-lg-7 hero-copy-column">
               <span className="badge circular-badge mb-3">{content.hero.eyebrow}</span>
               <h1 className="display-4 fw-semibold circular-heading mb-3">{content.hero.title}</h1>
               <p className="lead circular-copy mb-4">{content.hero.description}</p>
@@ -22,11 +26,8 @@ function HeroSection({ content }) {
             </div>
 
             <div className="col-lg-5">
-              <div className="hero-visual position-relative mx-auto">
-                <img src="/hero-hands.png" alt="Manos en círculo" className="hero-illustration" />
-                <div className="hero-quote rounded-4 p-3">
-                  <p className="mb-1 fw-semibold">"Tejiendo comunidad entre mujeres."</p>
-                </div>
+              <div className="hero-quote rounded-4 p-3 p-lg-4">
+                <p className="mb-1 fw-semibold">"Tejiendo comunidad entre mujeres."</p>
               </div>
             </div>
           </div>

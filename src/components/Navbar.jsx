@@ -6,8 +6,7 @@ function Navbar({ content, currentUser, language, onToggleLanguage, onLogout }) 
       <nav className="navbar navbar-expand-lg circular-navbar py-3">
         <div className="container">
           <Link className="navbar-brand circular-brand" to="/">
-            <img alt="Circular" className="circular-brand-logo" src="/circular-logo.png" />
-            <span>Circular</span>
+            Circular
           </Link>
 
           <div className="d-flex flex-column flex-lg-row align-items-lg-center gap-3 ms-lg-auto">

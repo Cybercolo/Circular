@@ -119,6 +119,8 @@ function normalizeCircleRecord(circle) {
     image: circle.image_url ?? '',
     type: circle.type ?? '',
     locationDetails: circle.location_details ?? '',
+    latitude: circle.latitude ?? circle.lat ?? null,
+    longitude: circle.longitude ?? circle.lng ?? null,
   }
 }
 
@@ -927,7 +929,7 @@ function App() {
 
       <FloatingFlowerDecoration />
       <Footer content={content} donationUrl={paypalDonationUrl} />
-    </div>
+        </div>
   )
 }
 

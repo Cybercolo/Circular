@@ -36,6 +36,17 @@ export const uiText = {
       mapView: 'Vista mapa',
       results: 'círculos disponibles',
       empty: 'No encontramos círculos con esos filtros. Prueba una búsqueda más amplia.',
+      useMyLocation: 'Usar mi ubicación',
+      locating: 'Buscando tu ubicación...',
+      nearbyTitle: 'Círculos cerca de ti',
+      nearbyFallback: 'Activa tu ubicación para ordenar los círculos por cercanía.',
+      nearbySorted: 'Ordenamos el mapa según la distancia desde tu ubicación actual.',
+      geolocationError:
+        'No pudimos acceder a tu ubicación. Revisa los permisos del navegador y vuelve a intentarlo.',
+      mapLoading: 'Estamos ubicando los círculos en el mapa...',
+      mapUnavailable: 'Todavía no logramos ubicar estos círculos en el mapa.',
+      youAreHere: 'Tú estás aquí',
+      away: 'de distancia',
     },
     circle: {
       join: 'Unirme al círculo',
@@ -143,11 +154,11 @@ export const uiText = {
       cta: 'Crear cuenta guía',
     },
     footer:
-    'Para contacto o problemas técnicos: contacto.circular.mujeres@gmail.com',
+    'contacto.circular.mujeres@gmail.com',
     donation: {
       title: 'Apoya a Circular',
       description:
-        'Hola, yo soy Coni, cree y mantengo circular para facilitar el encuentro de mujeres en círculos. Si este proyecto resuena contigo, haz un aporte y ayuda a mantener este proyecto vivo.',
+        'Hola, yo soy Coni, cree y mantengo circular para facilitar el encuentro de mujeres en círculos. Si este proyecto resuena contigo, haz un aporte y ayuda a mantenerlo vivo.',
       cta: 'Donar con PayPal',
     },
   },
@@ -188,6 +199,17 @@ export const uiText = {
       mapView: 'Map view',
       results: 'circles available',
       empty: 'No circles match those filters yet. Try broadening your search.',
+      useMyLocation: 'Use my location',
+      locating: 'Finding your location...',
+      nearbyTitle: 'Circles near you',
+      nearbyFallback: 'Enable your location to sort circles by distance.',
+      nearbySorted: 'We sort the map by distance from your current location.',
+      geolocationError:
+        'We could not access your location. Check your browser permissions and try again.',
+      mapLoading: 'We are placing circles on the map...',
+      mapUnavailable: 'We could not place these circles on the map yet.',
+      youAreHere: 'You are here',
+      away: 'away',
     },
     circle: {
       join: 'Join circle',
