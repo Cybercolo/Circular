@@ -5,6 +5,7 @@ function AuthPage({ content, onLogin, onSignup }) {
   const navigate = useNavigate()
   const [mode, setMode] = useState('login')
   const [feedback, setFeedback] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -20,23 +21,26 @@ function AuthPage({ content, onLogin, onSignup }) {
     }))
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
+    setIsSubmitting(true)
 
     if (mode === 'login') {
-      const result = onLogin(formData.email, formData.password)
-      setFeedback(result.success ? '' : content.auth.invalidLogin)
+      const result = await onLogin(formData.email, formData.password)
+      setFeedback(result.success ? '' : result.message || content.auth.invalidLogin)
       if (result.success) {
         navigate('/perfil')
       }
+      setIsSubmitting(false)
       return
     }
 
-    const result = onSignup(formData)
-    setFeedback(result.success ? content.auth.successSignup : content.auth.existingAccount)
-    if (result.success) {
+    const result = await onSignup(formData)
+    setFeedback(result.success ? content.auth.successSignup : result.message || content.auth.existingAccount)
+    if (result.success && result.sessionCreated) {
       navigate(formData.role === 'guide' ? '/panel-guia' : '/perfil')
     }
+    setIsSubmitting(false)
   }
 
   return (
@@ -158,7 +162,11 @@ function AuthPage({ content, onLogin, onSignup }) {
                     )}
 
                     <div className="col-12">
-                      <button className="btn circular-btn-primary rounded-pill px-4 py-3" type="submit">
+                      <button
+                        className="btn circular-btn-primary rounded-pill px-4 py-3"
+                        type="submit"
+                        disabled={isSubmitting}
+                      >
                         {mode === 'login' ? content.auth.submitLogin : content.auth.submitSignup}
                       </button>
                     </div>

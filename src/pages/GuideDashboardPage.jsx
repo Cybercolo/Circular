@@ -13,15 +13,6 @@ const emptyForm = {
   image: '',
 }
 
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = () => reject(new Error('No se pudo leer la imagen'))
-    reader.readAsDataURL(file)
-  })
-}
-
 function GuideDashboardPage({
   content,
   currentUser,
@@ -32,6 +23,9 @@ function GuideDashboardPage({
   const [formData, setFormData] = useState(emptyForm)
   const [created, setCreated] = useState(false)
   const [fileInputKey, setFileInputKey] = useState(0)
+  const [imagePreview, setImagePreview] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   if (currentUser?.role !== 'guide') {
     return (
@@ -56,19 +50,33 @@ function GuideDashboardPage({
 
     if (!file) {
       handleChange('image', '')
+      setImagePreview('')
       return
     }
 
-    const imageData = await readFileAsDataUrl(file)
-    handleChange('image', imageData)
+    handleChange('image', file)
+    setImagePreview(URL.createObjectURL(file))
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    onCreateCircle(formData)
+    setIsSubmitting(true)
+    setSubmitError('')
+
+    const result = await onCreateCircle(formData)
+
+    if (!result?.success) {
+      setCreated(false)
+      setSubmitError('No pudimos publicar este círculo. Revisa la configuración de Supabase e inténtalo de nuevo.')
+      setIsSubmitting(false)
+      return
+    }
+
     setCreated(true)
     setFormData(emptyForm)
+    setImagePreview('')
     setFileInputKey((currentKey) => currentKey + 1)
+    setIsSubmitting(false)
   }
 
   const requestsByCircle = guideCircles.map((circle) => ({
@@ -111,6 +119,7 @@ function GuideDashboardPage({
             <p className="text-muted mb-4">{content.dashboard.createSubtitle}</p>
 
             {created && <div className="alert alert-success rounded-4">{content.dashboard.success}</div>}
+            {submitError && <div className="alert alert-warning rounded-4">{submitError}</div>}
 
             <form className="row g-3" onSubmit={handleSubmit}>
               <div className="col-md-6">
@@ -217,17 +226,21 @@ function GuideDashboardPage({
                 />
                 <div className="form-text">{content.dashboard.imageHelp}</div>
               </div>
-              {formData.image && (
+              {imagePreview && (
                 <div className="col-12">
                   <img
-                    src={formData.image}
+                    src={imagePreview}
                     alt={formData.title || 'Vista previa del círculo'}
                     className="detail-image rounded-4 dashboard-image-preview"
                   />
                 </div>
               )}
               <div className="col-12">
-                <button className="btn circular-btn-primary rounded-pill px-4 py-3" type="submit">
+                <button
+                  className="btn circular-btn-primary rounded-pill px-4 py-3"
+                  type="submit"
+                  disabled={isSubmitting}
+                >
                   {content.dashboard.create}
                 </button>
               </div>

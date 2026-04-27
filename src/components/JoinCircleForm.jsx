@@ -8,6 +8,7 @@ function JoinCircleForm({ content, currentUser, circleId, onJoin }) {
     message: '',
   })
   const [submitted, setSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleChange = (field, value) => {
     setFormData((current) => ({
@@ -16,10 +17,16 @@ function JoinCircleForm({ content, currentUser, circleId, onJoin }) {
     }))
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    onJoin(circleId, formData)
-    setSubmitted(true)
+    setIsSubmitting(true)
+    const result = await onJoin(circleId, formData)
+
+    if (result?.success) {
+      setSubmitted(true)
+    }
+
+    setIsSubmitting(false)
   }
 
   if (submitted) {
@@ -80,7 +87,11 @@ function JoinCircleForm({ content, currentUser, circleId, onJoin }) {
         </div>
 
         <div className="col-12">
-          <button type="submit" className="btn circular-btn-primary rounded-pill px-4 py-3">
+          <button
+            type="submit"
+            className="btn circular-btn-primary rounded-pill px-4 py-3"
+            disabled={isSubmitting}
+          >
             {content.circle.submit}
           </button>
         </div>

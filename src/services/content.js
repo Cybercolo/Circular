@@ -137,7 +137,7 @@ export const uiText = {
       cta: 'Crear cuenta guía',
     },
     footer:
-    'Para contacto o problemas técnicos: contacto.circular@gmail.com',
+    'Para contacto o problemas técnicos: contacto.circular.mujeres@gmail.com',
     donation: {
       title: 'Apoya a Circular',
       description:
@@ -283,7 +283,7 @@ export const uiText = {
       cta: 'Create guide account',
     },
     footer:
-      'For contact or technical issues: contact.circular@gmail.com',
+      'For contact or technical issues: contacto.circular.mujeres@gmail.com',
     donation: {
       title: 'Support Circular',
       description:

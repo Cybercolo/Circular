@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Footer from './components/Footer'
 import FloatingFlowerDecoration from './components/FloatingFlowerDecoration'
+import { supabase } from './lib/supabaseClient'
 import Navbar from './components/Navbar'
 import AuthPage from './pages/AuthPage'
 import BecomeGuidePage from './pages/BecomeGuidePage'
@@ -13,8 +14,7 @@ import GuidesPage from './pages/GuidesPage'
 import HomePage from './pages/HomePage'
 import ProfilePage from './pages/ProfilePage'
 import { uiText } from './services/content'
-import { initialAccounts, initialCircles, initialGuides } from './services/mockData'
-import { loadFromStorage, saveToStorage, storageKeys } from './services/storage'
+import { initialGuides } from './services/mockData'
 
 const defaultFilters = {
   query: '',
@@ -42,6 +42,75 @@ const typeLabels = {
   },
 }
 
+function normalizeGuideRecord(guide) {
+  return {
+    id: guide.id,
+    profileId: guide.profile_id ?? null,
+    name: guide.name,
+    image: guide.image_url || 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=900&q=80',
+    story:
+      guide.story ||
+      'Esta guía forma parte de Circular y está construyendo su perfil público dentro de la plataforma.',
+    experience: guide.experience || 'Perfil de guía en proceso de configuración.',
+    special: guide.special || 'Círculos creados desde la comunidad Circular.',
+    rating: Number(guide.rating ?? 5),
+    reviews: Array.isArray(guide.reviews) ? guide.reviews : [],
+  }
+}
+
+function normalizeCircleRecord(circle) {
+  const normalizedPrice = Number(circle.price ?? 0)
+
+  return {
+    id: circle.id,
+    title: circle.title,
+    shortDescription: circle.short_description ?? '',
+    intention: circle.intention ?? circle.short_description ?? '',
+    theme: circle.theme ?? typeLabels.es[circle.type] ?? circle.type,
+    expectations: circle.expectations ?? '',
+    duration: circle.duration ?? '',
+    materials: circle.materials ?? '',
+    price: normalizedPrice,
+    priceType: circle.price_type ?? (normalizedPrice === 0 ? 'free' : 'paid'),
+    region: circle.region ?? '',
+    comuna: circle.comuna ?? '',
+    date: circle.date ?? '',
+    time: circle.time ?? '',
+    guideId: circle.guide_id ?? '',
+    image: circle.image_url ?? '',
+    type: circle.type ?? '',
+    locationDetails: circle.location_details ?? '',
+  }
+}
+
+function normalizeRegistrationRecord(registration) {
+  return {
+    id: registration.id,
+    circleId: registration.circle_id,
+    userId: registration.user_id,
+    name: registration.name,
+    email: registration.email,
+    phone: registration.phone,
+    message: registration.message ?? '',
+  }
+}
+
+async function uploadImage(file) {
+  const fileName = `${Date.now()}-${file.name}`
+  const filePath = `circles/${fileName}`
+
+  const { error } = await supabase.storage.from('circle-images').upload(filePath, file)
+
+  if (error) {
+    console.error(error)
+    return null
+  }
+
+  const { data: publicUrlData } = supabase.storage.from('circle-images').getPublicUrl(filePath)
+
+  return publicUrlData.publicUrl
+}
+
 function slugify(value) {
   return value
     .toLowerCase()
@@ -67,52 +136,141 @@ function formatDate(date, language) {
   }).format(new Date(`${date}T12:00:00`))
 }
 
-function toSessionUser(account) {
-  if (!account) {
+function toCurrentUser(user) {
+  if (!user) {
     return null
   }
 
-  const sessionUser = { ...account }
-  delete sessionUser.password
-  return sessionUser
+  const metadata = user.user_metadata ?? {}
+
+  return {
+    id: user.id,
+    email: user.email ?? '',
+    name: metadata.name || user.email?.split('@')[0] || 'Circular',
+    phone: metadata.phone || '',
+    role: metadata.role || 'participant',
+    guideId: metadata.guideId || null,
+  }
+}
+
+async function loadProfileForUser(user) {
+  if (!user) {
+    return null
+  }
+
+  const metadata = user.user_metadata ?? {}
+  const fallbackUser = toCurrentUser(user)
+
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
+
+  if (error) {
+    console.error(error)
+    return fallbackUser
+  }
+
+  if (!data) {
+    return fallbackUser
+  }
+
+  return {
+    id: user.id,
+    email: data.email || user.email || '',
+    name: data.name || metadata.name || user.email?.split('@')[0] || 'Circular',
+    phone: data.phone || metadata.phone || '',
+    role: data.role || metadata.role || 'participant',
+    guideId: data.guide_id || metadata.guideId || null,
+  }
 }
 
 function App() {
-  const [language, setLanguage] = useState(() => loadFromStorage(storageKeys.language, 'es'))
-  const [accounts, setAccounts] = useState(() =>
-    loadFromStorage(storageKeys.accounts, initialAccounts),
-  )
-  const [guides, setGuides] = useState(() => loadFromStorage(storageKeys.guides, initialGuides))
-  const [circles, setCircles] = useState(() => loadFromStorage(storageKeys.circles, initialCircles))
-  const [registrations, setRegistrations] = useState(() =>
-    loadFromStorage(storageKeys.registrations, []),
-  )
-  const [currentUser, setCurrentUser] = useState(() => loadFromStorage(storageKeys.user, null))
+  const [language, setLanguage] = useState('es')
+  const [guides, setGuides] = useState(initialGuides)
+  const [circles, setCircles] = useState([])
+  const [registrations, setRegistrations] = useState([])
+  const [currentUser, setCurrentUser] = useState(null)
   const [filters, setFilters] = useState(defaultFilters)
   const [viewMode, setViewMode] = useState('list')
 
   useEffect(() => {
-    saveToStorage(storageKeys.language, language)
-  }, [language])
+    let isMounted = true
+
+    const syncCurrentUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (isMounted) {
+        const profileUser = await loadProfileForUser(user)
+        setCurrentUser(profileUser)
+      }
+    }
+
+    syncCurrentUser()
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      loadProfileForUser(session?.user ?? null).then((profileUser) => {
+        setCurrentUser(profileUser)
+      })
+    })
+
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
+  }, [])
 
   useEffect(() => {
-    saveToStorage(storageKeys.accounts, accounts)
-  }, [accounts])
+    const loadGuides = async () => {
+      const { data, error } = await supabase.from('guides').select('*')
+
+      if (error) {
+        console.error(error)
+        return
+      }
+
+      if (data?.length) {
+        setGuides(data.map(normalizeGuideRecord))
+      }
+    }
+
+    loadGuides()
+  }, [])
 
   useEffect(() => {
-    saveToStorage(storageKeys.guides, guides)
-  }, [guides])
+    const loadCircles = async () => {
+      const { data, error } = await supabase.from('circles').select('*')
+
+      if (error) {
+        console.error(error)
+        return
+      }
+
+      setCircles((data ?? []).map(normalizeCircleRecord))
+    }
+
+    loadCircles()
+  }, [])
 
   useEffect(() => {
-    saveToStorage(storageKeys.circles, circles)
-  }, [circles])
+    const loadRegistrations = async () => {
+      if (!currentUser) {
+        setRegistrations([])
+        return
+      }
 
-  useEffect(() => {
-    saveToStorage(storageKeys.registrations, registrations)
-  }, [registrations])
+      const { data, error } = await supabase.from('registrations').select('*')
 
-  useEffect(() => {
-    saveToStorage(storageKeys.user, currentUser)
+      if (error) {
+        console.error(error)
+        return
+      }
+
+      setRegistrations((data ?? []).map(normalizeRegistrationRecord))
+    }
+
+    loadRegistrations()
   }, [currentUser])
 
   const content = uiText[language]
@@ -127,20 +285,35 @@ function App() {
       circles
         .map((circle) => ({
           ...circle,
-          guide: guidesById[circle.guideId],
+          guide:
+            guidesById[circle.guideId] ??
+            {
+              id: circle.guideId,
+              name:
+                circle.guideId === currentUser?.guideId && currentUser?.name
+                  ? currentUser.name
+                  : 'Guía de Circular',
+              image:
+                'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=900&q=80',
+              story:
+                'Esta guía está comenzando su presencia en Circular. Pronto podrá completar su perfil público.',
+              experience: 'Perfil de guía en proceso de configuración.',
+              special: 'Círculos creados desde la comunidad Circular.',
+              rating: 5,
+              reviews: [],
+            },
           displayDate: formatDate(circle.date, language),
           themeLabel: circle.theme || typeLabels[language][circle.type] || circle.type,
           priceLabel:
             circle.priceType === 'free' ? content.search.free : formatPrice(circle.price, language),
         }))
-        .filter((circle) => circle.guide)
         .sort((firstCircle, secondCircle) => {
           return (
             new Date(`${firstCircle.date}T${firstCircle.time}`) -
             new Date(`${secondCircle.date}T${secondCircle.time}`)
           )
         }),
-    [circles, guidesById, language, content.search.free],
+    [circles, guidesById, language, content.search.free, currentUser],
   )
 
   const regions = useMemo(
@@ -211,113 +384,180 @@ function App() {
     setFilters(defaultFilters)
   }
 
-  const handleLogin = (email, password) => {
-    const account = accounts.find(
-      (currentAccount) => currentAccount.email === email && currentAccount.password === password,
-    )
+  const handleLogin = async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
 
-    if (!account) {
-      return { success: false }
+    if (error || !data.user) {
+      return { success: false, message: error?.message }
     }
 
-    setCurrentUser(toSessionUser(account))
+    const profileUser = await loadProfileForUser(data.user)
+    setCurrentUser(profileUser)
     return { success: true }
   }
 
-  const handleSignup = (formData) => {
-    const emailExists = accounts.some((account) => account.email === formData.email)
-
-    if (emailExists) {
-      return { success: false }
-    }
-
+  const handleSignup = async (formData) => {
     let guideId
 
     if (formData.role === 'guide') {
       const baseId = slugify(formData.name)
       guideId = guidesById[baseId] ? `${baseId}-${guides.length + 1}` : baseId
-
-      setGuides((currentGuides) => [
-        ...currentGuides,
-        {
-          id: guideId,
-          name: formData.name,
-          image:
-            'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=900&q=80',
-          story:
-            'Estoy empezando mi camino como guía en Circular, ofreciendo encuentros sensibles y bien cuidados para crear comunidad.',
-          experience:
-            'Nueva guía en Circular. Puedes completar esta presentación con tu enfoque y recorrido.',
-          special:
-            'Mis círculos buscan abrir espacios humanos, amables y contemporáneos para compartir desde la autenticidad.',
-          rating: 5,
-          reviews: [],
-        },
-      ])
     }
 
-    const newAccount = {
-      id: crypto.randomUUID(),
-      name: formData.name,
+    const { data, error } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
-      phone: formData.phone,
-      role: formData.role,
-      guideId,
+      options: {
+        data: {
+          name: formData.name,
+          phone: formData.phone,
+          role: formData.role,
+          guideId,
+        },
+      },
+    })
+
+    if (error) {
+      return { success: false, message: error.message }
     }
 
-    setAccounts((currentAccounts) => [...currentAccounts, newAccount])
-    setCurrentUser(toSessionUser(newAccount))
+    const profilePayload = {
+      id: data.user?.id,
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      role: formData.role,
+      guide_id: guideId ?? null,
+    }
+
+    if (data.user?.id) {
+      const { error: profileError } = await supabase.from('profiles').upsert([profilePayload])
+
+      if (profileError) {
+        console.error(profileError)
+        return { success: false, message: profileError.message }
+      }
+    }
+
+    if (formData.role === 'guide' && guideId && data.user?.id) {
+      const guidePayload = {
+        id: guideId,
+        profile_id: data.user.id,
+        name: formData.name,
+        image_url:
+          'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=900&q=80',
+        story:
+          'Estoy empezando mi camino como guía en Circular, ofreciendo encuentros sensibles y bien cuidados para crear comunidad.',
+        experience:
+          'Nueva guía en Circular. Puedes completar esta presentación con tu enfoque y recorrido.',
+        special:
+          'Mis círculos buscan abrir espacios humanos, amables y contemporáneos para compartir desde la autenticidad.',
+        rating: 5,
+        reviews: [],
+      }
+
+      const { data: insertedGuide, error: guideError } = await supabase
+        .from('guides')
+        .upsert([guidePayload])
+        .select()
+        .single()
+
+      if (guideError) {
+        console.error(guideError)
+        return { success: false, message: guideError.message }
+      }
+
+      setGuides((currentGuides) => {
+        const nextGuide = normalizeGuideRecord(insertedGuide)
+        const filteredGuides = currentGuides.filter((guide) => guide.id !== nextGuide.id)
+        return [...filteredGuides, nextGuide]
+      })
+    }
+
+    if (data.session?.user) {
+      const profileUser = await loadProfileForUser(data.session.user)
+      setCurrentUser(profileUser)
+    }
+
+    return { success: true, sessionCreated: Boolean(data.session) }
+  }
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    setCurrentUser(null)
+  }
+
+  const handleJoinCircle = async (circleId, formData) => {
+    const payload = {
+      circle_id: circleId,
+      user_id: currentUser?.id ?? null,
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      message: formData.message,
+    }
+
+    const { data, error } = await supabase.from('registrations').insert([payload]).select().single()
+
+    if (error) {
+      console.error(error)
+      return { success: false }
+    }
+
+    setRegistrations((currentRegistrations) => [
+      normalizeRegistrationRecord(data),
+      ...currentRegistrations,
+    ])
 
     return { success: true }
   }
 
-  const handleLogout = () => {
-    setCurrentUser(null)
-  }
-
-  const handleJoinCircle = (circleId, formData) => {
-    setRegistrations((currentRegistrations) => [
-      {
-        id: crypto.randomUUID(),
-        circleId,
-        ...formData,
-      },
-      ...currentRegistrations,
-    ])
-  }
-
-  const handleCreateCircle = (formData) => {
+  const handleCreateCircle = async (formData) => {
     if (!currentUser?.guideId) {
-      return
+      return { success: false }
     }
 
     const normalizedPrice = formData.priceType === 'free' ? 0 : Number(formData.price || 0)
+    const imageUrl = await uploadImage(formData.image)
 
-    setCircles((currentCircles) => [
-      {
-        id: crypto.randomUUID(),
-        title: formData.title,
-        shortDescription: formData.shortDescription,
-        intention: formData.shortDescription,
-        theme: typeLabels.es[formData.type],
-        expectations:
-          'Una experiencia guiada con conversación, práctica grupal y un cierre cuidado para favorecer conexión y claridad.',
-        duration: '2 horas',
-        materials: 'Cuaderno, agua y ropa cómoda.',
-        price: normalizedPrice,
-        priceType: formData.priceType,
-        region: formData.region,
-        comuna: formData.comuna,
-        date: formData.date,
-        time: formData.time,
-        guideId: currentUser.guideId,
-        image: formData.image,
-        type: formData.type,
-        locationDetails: `${formData.comuna}, ${formData.region}. Dirección a confirmar después de la inscripción.`,
-      },
-      ...currentCircles,
-    ])
+    if (!imageUrl) {
+      return { success: false }
+    }
+
+    const payload = {
+      title: formData.title,
+      short_description: formData.shortDescription,
+      intention: formData.shortDescription,
+      theme: typeLabels.es[formData.type],
+      expectations:
+        'Una experiencia guiada con conversación, práctica grupal y un cierre cuidado para favorecer conexión y claridad.',
+      duration: '2 horas',
+      materials: 'Cuaderno, agua y ropa cómoda.',
+      price: normalizedPrice,
+      price_type: formData.priceType,
+      region: formData.region,
+      comuna: formData.comuna,
+      date: formData.date,
+      time: formData.time,
+      guide_id: currentUser.guideId,
+      image_url: imageUrl,
+      type: formData.type,
+      location_details: `${formData.comuna}, ${formData.region}. Dirección a confirmar después de la inscripción.`,
+    }
+
+    const { data, error } = await supabase.from('circles').insert([payload]).select().single()
+
+    if (error) {
+      console.error(error)
+      return { success: false }
+    }
+
+    setCircles((currentCircles) => [normalizeCircleRecord(data), ...currentCircles])
+
+    return { success: true }
   }
 
   return (
