@@ -6,7 +6,8 @@ function Navbar({ content, currentUser, language, onToggleLanguage, onLogout }) 
       <nav className="navbar navbar-expand-lg circular-navbar py-3">
         <div className="container">
           <Link className="navbar-brand circular-brand" to="/">
-            Circular
+            <img alt="Circular" className="circular-brand-logo" src="/circular-logo.png" />
+            <span>Circular</span>
           </Link>
 
           <div className="d-flex flex-column flex-lg-row align-items-lg-center gap-3 ms-lg-auto">
@@ -35,6 +36,24 @@ function Navbar({ content, currentUser, language, onToggleLanguage, onLogout }) 
 
               {currentUser ? (
                 <>
+                  <div className="navbar-user-chip rounded-pill px-2 py-2">
+                    {currentUser.avatar ? (
+                      <img
+                        alt={currentUser.name}
+                        className="navbar-user-avatar"
+                        referrerPolicy="no-referrer"
+                        src={currentUser.avatar}
+                      />
+                    ) : (
+                      <span className="navbar-user-avatar navbar-user-avatar-fallback">
+                        {currentUser.name?.charAt(0)?.toUpperCase() || 'C'}
+                      </span>
+                    )}
+                    <div className="navbar-user-copy">
+                      <span className="navbar-user-name">{currentUser.name}</span>
+                      <span className="navbar-user-email">{currentUser.email}</span>
+                    </div>
+                  </div>
                   <NavLink className="btn btn-light rounded-pill px-3" to="/perfil">
                     {content.nav.profile}
                   </NavLink>
@@ -47,7 +66,7 @@ function Navbar({ content, currentUser, language, onToggleLanguage, onLogout }) 
                   </button>
                 </>
               ) : (
-                <NavLink className="btn circular-btn-primary rounded-pill px-4" to="/auth">
+                <NavLink className="btn circular-btn-primary circular-login-button rounded-pill px-4" to="/auth">
                   {content.nav.login}
                 </NavLink>
               )}

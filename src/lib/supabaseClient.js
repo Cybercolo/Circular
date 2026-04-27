@@ -60,6 +60,9 @@ function createMockSupabaseClient() {
       async signInWithPassword() {
         return { data: { user: null, session: null }, error: missingEnvError }
       },
+      async signInWithOAuth() {
+        return { data: { provider: 'google', url: null }, error: missingEnvError }
+      },
       async getUser() {
         return { data: { user: null }, error: null }
       },

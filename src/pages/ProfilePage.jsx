@@ -26,6 +26,18 @@ function ProfilePage({ content, currentUser, registrations, circles }) {
   return (
     <div className="container py-4 py-lg-5">
       <div className="guide-hero rounded-5 p-4 p-lg-5 mb-4">
+        {currentUser.avatar ? (
+          <img
+            alt={currentUser.name}
+            className="profile-avatar mb-4"
+            referrerPolicy="no-referrer"
+            src={currentUser.avatar}
+          />
+        ) : (
+          <div className="profile-avatar profile-avatar-fallback mb-4">
+            {currentUser.name?.charAt(0)?.toUpperCase() || 'C'}
+          </div>
+        )}
         <p className="text-uppercase small fw-semibold circular-eyebrow mb-2">{content.profile.title}</p>
         <h1 className="display-6 fw-semibold circular-heading mb-2">{currentUser.name}</h1>
         <p className="mb-2 text-muted">{currentUser.email}</p>

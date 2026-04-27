@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Footer from './components/Footer'
 import FloatingFlowerDecoration from './components/FloatingFlowerDecoration'
@@ -26,6 +26,7 @@ const defaultFilters = {
 }
 
 const paypalDonationUrl = 'https://www.paypal.com/donate'
+const pendingGoogleRoleKey = 'circular-pending-google-role'
 
 const typeLabels = {
   es: {
@@ -54,6 +55,30 @@ function getSupabaseErrorMessage(error, fallbackMessage) {
   }
 
   return fallbackMessage
+}
+
+function getStoredGoogleRole() {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  return window.localStorage.getItem(pendingGoogleRoleKey)
+}
+
+function setStoredGoogleRole(role) {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.setItem(pendingGoogleRoleKey, role)
+}
+
+function clearStoredGoogleRole() {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.localStorage.removeItem(pendingGoogleRoleKey)
 }
 
 function normalizeGuideRecord(guide) {
@@ -134,6 +159,24 @@ function slugify(value) {
     .replace(/(^-|-$)/g, '')
 }
 
+function getUserDisplayName(user) {
+  const metadata = user?.user_metadata ?? {}
+
+  return (
+    metadata.full_name ||
+    metadata.name ||
+    metadata.user_name ||
+    user?.email?.split('@')[0] ||
+    'Circular'
+  )
+}
+
+function getUserAvatar(user) {
+  const metadata = user?.user_metadata ?? {}
+
+  return metadata.avatar_url || metadata.picture || null
+}
+
 function formatPrice(price, language) {
   return new Intl.NumberFormat(language === 'es' ? 'es-CL' : 'en-US', {
     style: 'currency',
@@ -160,10 +203,52 @@ function toCurrentUser(user) {
   return {
     id: user.id,
     email: user.email ?? '',
-    name: metadata.name || user.email?.split('@')[0] || 'Circular',
+    name: getUserDisplayName(user),
     phone: metadata.phone || '',
     role: metadata.role || 'participant',
     guideId: metadata.guideId || null,
+    avatar: getUserAvatar(user),
+  }
+}
+
+async function loadGuideIdForProfile(profileId) {
+  if (!profileId) {
+    return null
+  }
+
+  const { data, error } = await supabase.from('guides').select('id').eq('profile_id', profileId).maybeSingle()
+
+  if (error) {
+    console.error(error)
+    return null
+  }
+
+  return data?.id ?? null
+}
+
+async function getAvailableGuideId(name, profileId) {
+  const baseId = slugify(name) || `guia-${profileId?.slice(0, 8) ?? Date.now()}`
+  let candidate = baseId
+  let suffix = 1
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('guides')
+      .select('id, profile_id')
+      .eq('id', candidate)
+      .maybeSingle()
+
+    if (error) {
+      console.error(error)
+      return candidate
+    }
+
+    if (!data || data.profile_id === profileId) {
+      return candidate
+    }
+
+    candidate = `${baseId}-${suffix}`
+    suffix += 1
   }
 }
 
@@ -186,13 +271,18 @@ async function loadProfileForUser(user) {
     return fallbackUser
   }
 
+  const role = data.role || metadata.role || 'participant'
+  const guideId =
+    role === 'guide' ? await loadGuideIdForProfile(user.id) : metadata.guideId || null
+
   return {
     id: user.id,
     email: data.email || user.email || '',
-    name: data.name || metadata.name || user.email?.split('@')[0] || 'Circular',
+    name: data.name || getUserDisplayName(user),
     phone: data.phone || metadata.phone || '',
-    role: data.role || metadata.role || 'participant',
-    guideId: data.guide_id || metadata.guideId || null,
+    role,
+    guideId,
+    avatar: getUserAvatar(user),
   }
 }
 
@@ -205,6 +295,104 @@ function App() {
   const [filters, setFilters] = useState(defaultFilters)
   const [viewMode, setViewMode] = useState('list')
 
+  const syncAuthenticatedUser = useCallback(async (user, preferredRole = null) => {
+    if (!user) {
+      clearStoredGoogleRole()
+      return null
+    }
+
+    const fallbackUser = toCurrentUser(user)
+    const profileName = getUserDisplayName(user)
+    const profileEmail = user.email ?? ''
+
+    try {
+      const { data: existingProfile, error: profileLookupError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (profileLookupError) {
+        console.error(profileLookupError)
+        return fallbackUser
+      }
+
+      // Keep OAuth users aligned with the same profiles/guides tables used by email auth.
+      const role = existingProfile?.role || preferredRole || user.user_metadata?.role || 'participant'
+      const profilePayload = {
+        id: user.id,
+        name: existingProfile?.name || profileName,
+        email: existingProfile?.email || profileEmail,
+        role,
+      }
+
+      const { error: profileUpsertError } = await supabase.from('profiles').upsert([profilePayload])
+
+      if (profileUpsertError) {
+        console.error(profileUpsertError)
+        return fallbackUser
+      }
+
+      if (role === 'guide') {
+        const { data: existingGuide, error: guideLookupError } = await supabase
+          .from('guides')
+          .select('*')
+          .eq('profile_id', user.id)
+          .maybeSingle()
+
+        if (guideLookupError) {
+          console.error(guideLookupError)
+        } else if (existingGuide) {
+          setGuides((currentGuides) => {
+            const nextGuide = normalizeGuideRecord(existingGuide)
+            const filteredGuides = currentGuides.filter((guide) => guide.id !== nextGuide.id)
+            return [...filteredGuides, nextGuide]
+          })
+        } else {
+          const guideId = await getAvailableGuideId(profilePayload.name, user.id)
+          const guidePayload = {
+            id: guideId,
+            profile_id: user.id,
+            name: profilePayload.name,
+            image_url:
+              getUserAvatar(user) ||
+              'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=900&q=80',
+            story:
+              'Estoy empezando mi camino como guía en Circular, ofreciendo encuentros sensibles y bien cuidados para crear comunidad.',
+            experience:
+              'Nueva guía en Circular. Puedes completar esta presentación con tu enfoque y recorrido.',
+            special:
+              'Mis círculos buscan abrir espacios humanos, amables y contemporáneos para compartir desde la autenticidad.',
+            rating: 5,
+            reviews: [],
+          }
+
+          const { data: insertedGuide, error: guideCreateError } = await supabase
+            .from('guides')
+            .upsert([guidePayload])
+            .select()
+            .single()
+
+          if (guideCreateError) {
+            console.error(guideCreateError)
+          } else if (insertedGuide) {
+            setGuides((currentGuides) => {
+              const nextGuide = normalizeGuideRecord(insertedGuide)
+              const filteredGuides = currentGuides.filter((guide) => guide.id !== nextGuide.id)
+              return [...filteredGuides, nextGuide]
+            })
+          }
+        }
+      }
+
+      clearStoredGoogleRole()
+      return loadProfileForUser(user)
+    } catch (error) {
+      console.error(error)
+      return fallbackUser
+    }
+  }, [])
+
   useEffect(() => {
     let isMounted = true
 
@@ -214,7 +402,7 @@ function App() {
       } = await supabase.auth.getUser()
 
       if (isMounted) {
-        const profileUser = await loadProfileForUser(user)
+        const profileUser = await syncAuthenticatedUser(user, getStoredGoogleRole())
         setCurrentUser(profileUser)
       }
     }
@@ -224,7 +412,7 @@ function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      loadProfileForUser(session?.user ?? null).then((profileUser) => {
+      syncAuthenticatedUser(session?.user ?? null, getStoredGoogleRole()).then((profileUser) => {
         setCurrentUser(profileUser)
       })
     })
@@ -233,7 +421,7 @@ function App() {
       isMounted = false
       subscription.unsubscribe()
     }
-  }, [])
+  }, [syncAuthenticatedUser])
 
   useEffect(() => {
     const loadGuides = async () => {
@@ -421,7 +609,7 @@ function App() {
         return { success: false, message: error?.message }
       }
 
-      const profileUser = await loadProfileForUser(data.user)
+      const profileUser = await syncAuthenticatedUser(data.user)
       setCurrentUser(profileUser)
       return { success: true }
     } catch (error) {
@@ -447,7 +635,6 @@ function App() {
         options: {
           data: {
             name: formData.name,
-            phone: formData.phone,
             role: formData.role,
             guideId,
           },
@@ -455,6 +642,12 @@ function App() {
       })
 
       if (error) {
+        const rawMessage = error.message?.toLowerCase() ?? ''
+
+        if (rawMessage.includes('rate limit')) {
+          return { success: false, message: content.auth.rateLimitError }
+        }
+
         return { success: false, message: error.message }
       }
 
@@ -462,9 +655,7 @@ function App() {
         id: data.user?.id,
         name: formData.name,
         email: formData.email,
-        phone: formData.phone,
         role: formData.role,
-        guide_id: guideId ?? null,
       }
 
       if (data.user?.id) {
@@ -512,12 +703,43 @@ function App() {
       }
 
       if (data.session?.user) {
-        const profileUser = await loadProfileForUser(data.session.user)
+        const profileUser = await syncAuthenticatedUser(data.session.user, formData.role)
         setCurrentUser(profileUser)
       }
 
       return { success: true, sessionCreated: Boolean(data.session) }
     } catch (error) {
+      return {
+        success: false,
+        message: getSupabaseErrorMessage(error, content.auth.networkError),
+      }
+    }
+  }
+
+  const handleGoogleAuth = async (preferredRole = null) => {
+    try {
+      // Google redirects away from the app, so we persist the chosen role for first-time users.
+      setStoredGoogleRole(preferredRole || 'participant')
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: typeof window === 'undefined' ? undefined : `${window.location.origin}/auth`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      })
+
+      if (error) {
+        clearStoredGoogleRole()
+        return { success: false, message: error.message }
+      }
+
+      return { success: true, redirecting: Boolean(data?.url) }
+    } catch (error) {
+      clearStoredGoogleRole()
       return {
         success: false,
         message: getSupabaseErrorMessage(error, content.auth.networkError),
@@ -666,7 +888,15 @@ function App() {
           <Route path="/convertirse-guia" element={<BecomeGuidePage content={content} />} />
           <Route
             path="/auth"
-            element={<AuthPage content={content} onLogin={handleLogin} onSignup={handleSignup} />}
+            element={
+              <AuthPage
+                content={content}
+                currentUser={currentUser}
+                onLogin={handleLogin}
+                onSignup={handleSignup}
+                onGoogleAuth={handleGoogleAuth}
+              />
+            }
           />
           <Route
             path="/panel-guia"

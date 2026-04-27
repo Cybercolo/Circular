@@ -85,9 +85,16 @@ export const uiText = {
       guide: 'Guía',
       submitLogin: 'Entrar a mi cuenta',
       submitSignup: 'Crear mi cuenta',
+      orContinueWith: 'o continúa con',
+      googleContinue: 'Continuar con Google',
+      googleLoading: 'Conectando con Google...',
+      googleRoleHint: 'Si es tu primera vez, crearemos tu cuenta como {role}.',
+      googleError: 'No pudimos iniciar el acceso con Google. Inténtalo nuevamente.',
       successSignup: 'Tu cuenta fue creada y ya puedes explorar Circular.',
       invalidLogin: 'No encontramos una cuenta con ese correo y contraseña.',
       existingAccount: 'Ya existe una cuenta con ese correo.',
+      rateLimitError:
+        'Supabase bloqueo temporalmente el envio de correos de confirmacion. Para seguir creando cuentas ahora mismo, desactiva "Confirm email" en Supabase > Authentication > Providers > Email y vuelve a intentarlo.',
       networkError:
         'No pudimos conectar con Supabase. Revisa tu conexion o la configuracion del proyecto e intentalo nuevamente.',
     },
@@ -230,9 +237,16 @@ export const uiText = {
       guide: 'Guide',
       submitLogin: 'Login to my account',
       submitSignup: 'Create my account',
+      orContinueWith: 'or continue with',
+      googleContinue: 'Continue with Google',
+      googleLoading: 'Connecting to Google...',
+      googleRoleHint: 'If this is your first time, we will create your account as {role}.',
+      googleError: 'We could not start Google sign-in. Please try again.',
       successSignup: 'Your account was created and you can now explore Circular.',
       invalidLogin: 'We could not find an account with that email and password.',
       existingAccount: 'An account with that email already exists.',
+      rateLimitError:
+        'Supabase temporarily blocked confirmation emails. To keep creating accounts right now, disable "Confirm email" in Supabase > Authentication > Providers > Email and try again.',
       networkError:
         'We could not connect to Supabase. Check your connection or project configuration and try again.',
     },

@@ -81,10 +81,21 @@ a {
 }
 
 .circular-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
   color: var(--circular-primary);
   font-size: 1.7rem;
   font-weight: 700;
   letter-spacing: -0.03em;
+}
+
+.circular-brand-logo {
+  width: 2.8rem;
+  height: 2.8rem;
+  object-fit: contain;
+  border-radius: 50%;
+  box-shadow: 0 10px 22px rgba(216, 86, 118, 0.14);
 }
 
 .circular-nav-link {
@@ -117,6 +128,130 @@ a {
 .circular-btn-primary:focus {
   color: #fff;
   background: linear-gradient(135deg, var(--circular-primary-dark), var(--circular-primary));
+}
+
+.circular-login-button,
+.circular-login-button:hover,
+.circular-login-button:focus,
+.circular-login-button:active,
+.circular-login-button.active {
+  color: #fff;
+}
+
+.google-auth-button {
+  width: 100%;
+  border: 1px solid rgba(216, 86, 118, 0.14);
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--circular-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  box-shadow: 0 14px 24px rgba(84, 39, 56, 0.08);
+}
+
+.google-auth-button:hover,
+.google-auth-button:focus {
+  background: rgba(255, 248, 250, 1);
+  color: var(--circular-text);
+}
+
+.google-auth-button:disabled {
+  opacity: 0.75;
+}
+
+.google-auth-button svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+}
+
+.auth-divider {
+  position: relative;
+  text-align: center;
+}
+
+.auth-divider::before {
+  content: "";
+  position: absolute;
+  inset: 50% 0 auto;
+  border-top: 1px solid rgba(216, 86, 118, 0.14);
+}
+
+.auth-divider span {
+  position: relative;
+  display: inline-block;
+  padding-inline: 0.85rem;
+  background: rgba(255, 250, 252, 0.96);
+  color: var(--circular-text-soft);
+  font-size: 0.95rem;
+}
+
+.auth-helper-text {
+  color: var(--circular-text-soft);
+  font-size: 0.95rem;
+}
+
+.navbar-user-chip {
+  max-width: 18rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(216, 86, 118, 0.12);
+}
+
+.navbar-user-avatar,
+.profile-avatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.navbar-user-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.navbar-user-avatar-fallback,
+.profile-avatar-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--circular-primary), var(--circular-secondary));
+  color: #fff;
+  font-weight: 700;
+}
+
+.navbar-user-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.navbar-user-name,
+.navbar-user-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navbar-user-name {
+  color: var(--circular-text);
+  font-weight: 600;
+}
+
+.navbar-user-email {
+  color: var(--circular-text-soft);
+  font-size: 0.82rem;
+}
+
+.profile-avatar {
+  width: 5rem;
+  height: 5rem;
 }
 
 .auth-role-button {
