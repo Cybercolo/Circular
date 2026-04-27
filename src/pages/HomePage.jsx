@@ -1,5 +1,6 @@
 import CircleFeed from '../components/CircleFeed'
 import HeroSection from '../components/HeroSection'
+import MapView from '../components/MapView'
 import SearchFilters from '../components/SearchFilters'
 
 function HomePage({
@@ -11,6 +12,8 @@ function HomePage({
   onChangeFilter,
   onClearFilters,
   filteredCircles,
+  viewMode,
+  onViewModeChange,
 }) {
   return (
     <>
@@ -23,6 +26,8 @@ function HomePage({
         comunas={comunas}
         onChange={onChangeFilter}
         onClear={onClearFilters}
+        viewMode={viewMode}
+        onViewModeChange={onViewModeChange}
         resultsCount={filteredCircles.length}
       />
       <section className="container pb-3">
@@ -35,7 +40,11 @@ function HomePage({
           </div>
         </div>
       </section>
-      <CircleFeed circles={filteredCircles.slice(0, 6)} content={content} />
+      {viewMode === 'map' ? (
+        <MapView circles={filteredCircles} content={content} />
+      ) : (
+        <CircleFeed circles={filteredCircles.slice(0, 6)} content={content} />
+      )}
     </>
   )
 }

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { divIcon, latLngBounds } from 'leaflet'
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
 import { getCircleCoordinates, getDistanceInKm, getMapCenter } from '../services/geo'
+import useGeolocation from '../hooks/useGeolocation'
+import EventMarker from './EventMarker'
 
 const circleIcon = divIcon({
   className: 'custom-map-marker',
@@ -45,9 +47,8 @@ function formatDistance(distance, content) {
 function MapView({ circles, content }) {
   const [mappedCircles, setMappedCircles] = useState([])
   const [isLoadingMap, setIsLoadingMap] = useState(true)
-  const [userLocation, setUserLocation] = useState(null)
-  const [locationError, setLocationError] = useState('')
-  const [isLocating, setIsLocating] = useState(false)
+  const [radiusKm, setRadiusKm] = useState(25)
+  const { userLocation, mapCenter, locationError, isLocating, requestLocation } = useGeolocation()
 
   useEffect(() => {
     let isMounted = true
@@ -85,12 +86,17 @@ function MapView({ circles, content }) {
   }, [circles])
 
   const circlesByDistance = useMemo(() => {
-    return mappedCircles
+    const circlesWithDistance = mappedCircles
       .map((circle) => ({
         ...circle,
         distanceKm: userLocation ? getDistanceInKm(userLocation, circle.coordinates) : null,
       }))
-      .sort((firstCircle, secondCircle) => {
+
+    const filteredCircles = userLocation
+      ? circlesWithDistance.filter((circle) => circle.distanceKm === null || circle.distanceKm <= radiusKm)
+      : circlesWithDistance
+
+    return filteredCircles.sort((firstCircle, secondCircle) => {
         if (firstCircle.distanceKm === null) {
           return 1
         }
@@ -108,44 +114,6 @@ function MapView({ circles, content }) {
     return userLocation ? [userLocation, ...points] : points
   }, [mappedCircles, userLocation])
 
-  const handleLocateUser = () => {
-    if (!navigator.geolocation) {
-      setLocationError(content.search.geolocationError)
-      return
-    }
-
-    setIsLocating(true)
-    setLocationError('')
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        })
-        setIsLocating(false)
-      },
-      () => {
-        setLocationError(content.search.geolocationError)
-        setIsLocating(false)
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-      },
-    )
-  }
-
-  if (!circles.length) {
-    return (
-      <div className="container pb-5">
-        <div className="empty-panel rounded-5 p-5 text-center">
-          <p className="mb-0">{content.search.empty}</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <section className="container pb-5">
       <div className="map-shell rounded-5 p-4 p-lg-5">
@@ -157,27 +125,44 @@ function MapView({ circles, content }) {
             </p>
           </div>
 
-          <button
-            type="button"
-            className="btn circular-btn-primary rounded-pill px-4"
-            disabled={isLocating}
-            onClick={handleLocateUser}
-          >
-            {isLocating ? content.search.locating : content.search.useMyLocation}
-          </button>
+          <div className="d-flex flex-wrap gap-2 align-items-center">
+            <label className="small fw-semibold mb-0">{content.search.radius}</label>
+            <select
+              className="form-select circular-input map-radius-select"
+              disabled={!userLocation}
+              value={radiusKm}
+              onChange={(event) => setRadiusKm(Number(event.target.value))}
+            >
+              <option value="10">10 km</option>
+              <option value="25">25 km</option>
+              <option value="50">50 km</option>
+              <option value="100">100 km</option>
+            </select>
+
+            <button
+              type="button"
+              className="btn circular-btn-primary rounded-pill px-4"
+              disabled={isLocating}
+              onClick={requestLocation}
+            >
+              {isLocating ? content.search.locating : content.search.useMyLocation}
+            </button>
+          </div>
         </div>
 
-        {locationError && <div className="alert alert-warning rounded-4 mb-4">{locationError}</div>}
+        {locationError && (
+          <div className="alert alert-warning rounded-4 mb-4">{content.search.geolocationError}</div>
+        )}
 
         {isLoadingMap ? (
           <div className="empty-panel rounded-5 p-5 text-center">
             <p className="mb-0">{content.search.mapLoading}</p>
           </div>
-        ) : mappedCircles.length ? (
+        ) : (
           <div className="row g-4 align-items-start">
             <div className="col-lg-8">
               <div className="real-map-shell rounded-5 overflow-hidden">
-                <MapContainer center={getMapCenter()} className="real-map-canvas" scrollWheelZoom>
+                <MapContainer center={mapCenter || getMapCenter()} className="real-map-canvas" scrollWheelZoom>
                   <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -191,24 +176,13 @@ function MapView({ circles, content }) {
                   )}
 
                   {circlesByDistance.map((circle) => (
-                    <Marker
+                    <EventMarker
                       key={circle.id}
+                      circle={circle}
+                      content={content}
+                      distanceLabel={formatDistance(circle.distanceKm, content)}
                       icon={circleIcon}
-                      position={[circle.coordinates.lat, circle.coordinates.lng]}
-                    >
-                      <Popup>
-                        <div className="map-popup-copy">
-                          <strong>{circle.title}</strong>
-                          <div>{circle.comuna}</div>
-                          {circle.distanceKm !== null && (
-                            <small>{formatDistance(circle.distanceKm, content)}</small>
-                          )}
-                          <div className="mt-2">
-                            <Link to={`/circulos/${circle.id}`}>{content.circle.details}</Link>
-                          </div>
-                        </div>
-                      </Popup>
-                    </Marker>
+                    />
                   ))}
                 </MapContainer>
               </div>
@@ -216,38 +190,40 @@ function MapView({ circles, content }) {
 
             <div className="col-lg-4">
               <div className="nearby-list rounded-5 p-3 p-lg-4">
-                <div className="d-grid gap-3">
-                  {circlesByDistance.map((circle) => (
-                    <Link
-                      key={circle.id}
-                      className="nearby-card rounded-4 p-3 text-decoration-none"
-                      to={`/circulos/${circle.id}`}
-                    >
-                      <div className="d-flex justify-content-between gap-3 align-items-start">
-                        <div>
-                          <p className="fw-semibold mb-1 circular-heading">{circle.title}</p>
-                          <p className="small text-muted mb-1">
-                            {circle.comuna} · {circle.region}
-                          </p>
-                          <p className="small text-muted mb-0">
-                            {circle.displayDate} · {circle.time}
-                          </p>
+                {circlesByDistance.length ? (
+                  <div className="d-grid gap-3">
+                    {circlesByDistance.map((circle) => (
+                      <Link
+                        key={circle.id}
+                        className="nearby-card rounded-4 p-3 text-decoration-none"
+                        to={`/circulos/${circle.id}`}
+                      >
+                        <div className="d-flex justify-content-between gap-3 align-items-start">
+                          <div>
+                            <p className="fw-semibold mb-1 circular-heading">{circle.title}</p>
+                            <p className="small text-muted mb-1">
+                              {circle.comuna} · {circle.region}
+                            </p>
+                            <p className="small text-muted mb-0">
+                              {circle.displayDate} · {circle.time}
+                            </p>
+                          </div>
+                          {circle.distanceKm !== null && (
+                            <span className="badge circular-badge">
+                              {formatDistance(circle.distanceKm, content)}
+                            </span>
+                          )}
                         </div>
-                        {circle.distanceKm !== null && (
-                          <span className="badge circular-badge">
-                            {formatDistance(circle.distanceKm, content)}
-                          </span>
-                        )}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="empty-panel rounded-4 p-4 text-center">
+                    <p className="mb-0">{mappedCircles.length ? content.search.noNearby : content.search.mapUnavailable}</p>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        ) : (
-          <div className="empty-panel rounded-5 p-5 text-center">
-            <p className="mb-0">{content.search.mapUnavailable}</p>
           </div>
         )}
       </div>

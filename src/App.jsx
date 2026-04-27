@@ -14,7 +14,7 @@ import GuidesPage from './pages/GuidesPage'
 import HomePage from './pages/HomePage'
 import ProfilePage from './pages/ProfilePage'
 import { uiText } from './services/content'
-import { initialGuides } from './services/mockData'
+import { initialCircles, initialGuides } from './services/mockData'
 
 const defaultFilters = {
   query: '',
@@ -456,9 +456,11 @@ function App() {
           return
         }
 
-        setCircles((data ?? []).map(normalizeCircleRecord))
+        const nextCircles = (data ?? []).length ? data : initialCircles
+        setCircles(nextCircles.map(normalizeCircleRecord))
       } catch (error) {
         console.warn(getSupabaseErrorMessage(error, 'No se pudieron cargar los circulos desde Supabase.'))
+        setCircles(initialCircles.map(normalizeCircleRecord))
       }
     }
 
@@ -848,6 +850,8 @@ function App() {
                 onChangeFilter={handleFilterChange}
                 onClearFilters={handleClearFilters}
                 filteredCircles={filteredCircles}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
               />
             }
           />

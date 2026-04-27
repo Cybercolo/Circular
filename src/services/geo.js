@@ -1,6 +1,6 @@
 const chileCenter = {
-  lat: -35.6751,
-  lng: -71.543,
+  lat: -33.4489,
+  lng: -70.6693,
 }
 
 const comunaCoordinates = {

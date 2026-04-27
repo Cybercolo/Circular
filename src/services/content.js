@@ -45,8 +45,11 @@ export const uiText = {
         'No pudimos acceder a tu ubicación. Revisa los permisos del navegador y vuelve a intentarlo.',
       mapLoading: 'Estamos ubicando los círculos en el mapa...',
       mapUnavailable: 'Todavía no logramos ubicar estos círculos en el mapa.',
+      noNearby: 'No encontramos círculos dentro del radio seleccionado.',
       youAreHere: 'Tú estás aquí',
       away: 'de distancia',
+      radius: 'Radio',
+      allRadius: 'Todo Chile',
     },
     circle: {
       join: 'Unirme al círculo',
@@ -145,11 +148,11 @@ export const uiText = {
     becomeGuide: {
       title: 'Conviértete en guía en Circular',
       description:
-        'Comparte tu enfoque, atrae a mujeres alineadas con tu propuesta y presenta tus círculos en un entorno visualmente cuidado y confiable.',
+        'Comparte tu enfoque, atrae a mujeres alineadas con tu propuesta y presenta tus círculos a la comunidad.',
       bullets: [
-        'Muestra tu historia y experiencia con una presencia profesional.',
+        'Muestra tu historia y experiencia.',
         'Publica círculos con fechas, ubicación, valor y cupos claros.',
-        'Genera confianza con un perfil cálido, elegante y humano.',
+        'Genera confianza con un perfil cálido y humano.',
       ],
       cta: 'Crear cuenta guía',
     },
@@ -208,8 +211,11 @@ export const uiText = {
         'We could not access your location. Check your browser permissions and try again.',
       mapLoading: 'We are placing circles on the map...',
       mapUnavailable: 'We could not place these circles on the map yet.',
+      noNearby: 'No circles were found within the selected radius.',
       youAreHere: 'You are here',
       away: 'away',
+      radius: 'Radius',
+      allRadius: 'All Chile',
     },
     circle: {
       join: 'Join circle',
