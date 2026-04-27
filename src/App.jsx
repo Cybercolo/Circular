@@ -42,6 +42,20 @@ const typeLabels = {
   },
 }
 
+function getSupabaseErrorMessage(error, fallbackMessage) {
+  const rawMessage = error?.message || ''
+
+  if (rawMessage === 'TypeError: Failed to fetch' || rawMessage === 'TypeError: Load failed') {
+    return fallbackMessage
+  }
+
+  if (rawMessage) {
+    return rawMessage
+  }
+
+  return fallbackMessage
+}
+
 function normalizeGuideRecord(guide) {
   return {
     id: guide.id,
@@ -223,15 +237,19 @@ function App() {
 
   useEffect(() => {
     const loadGuides = async () => {
-      const { data, error } = await supabase.from('guides').select('*')
+      try {
+        const { data, error } = await supabase.from('guides').select('*')
 
-      if (error) {
-        console.error(error)
-        return
-      }
+        if (error) {
+          console.error(error)
+          return
+        }
 
-      if (data?.length) {
-        setGuides(data.map(normalizeGuideRecord))
+        if (data?.length) {
+          setGuides(data.map(normalizeGuideRecord))
+        }
+      } catch (error) {
+        console.warn(getSupabaseErrorMessage(error, 'No se pudieron cargar las guias desde Supabase.'))
       }
     }
 
@@ -240,14 +258,18 @@ function App() {
 
   useEffect(() => {
     const loadCircles = async () => {
-      const { data, error } = await supabase.from('circles').select('*')
+      try {
+        const { data, error } = await supabase.from('circles').select('*')
 
-      if (error) {
-        console.error(error)
-        return
+        if (error) {
+          console.error(error)
+          return
+        }
+
+        setCircles((data ?? []).map(normalizeCircleRecord))
+      } catch (error) {
+        console.warn(getSupabaseErrorMessage(error, 'No se pudieron cargar los circulos desde Supabase.'))
       }
-
-      setCircles((data ?? []).map(normalizeCircleRecord))
     }
 
     loadCircles()
@@ -260,14 +282,18 @@ function App() {
         return
       }
 
-      const { data, error } = await supabase.from('registrations').select('*')
+      try {
+        const { data, error } = await supabase.from('registrations').select('*')
 
-      if (error) {
-        console.error(error)
-        return
+        if (error) {
+          console.error(error)
+          return
+        }
+
+        setRegistrations((data ?? []).map(normalizeRegistrationRecord))
+      } catch (error) {
+        console.warn(getSupabaseErrorMessage(error, 'No se pudieron cargar las inscripciones desde Supabase.'))
       }
-
-      setRegistrations((data ?? []).map(normalizeRegistrationRecord))
     }
 
     loadRegistrations()
@@ -385,104 +411,118 @@ function App() {
   }
 
   const handleLogin = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-    if (error || !data.user) {
-      return { success: false, message: error?.message }
+      if (error || !data.user) {
+        return { success: false, message: error?.message }
+      }
+
+      const profileUser = await loadProfileForUser(data.user)
+      setCurrentUser(profileUser)
+      return { success: true }
+    } catch (error) {
+      return {
+        success: false,
+        message: getSupabaseErrorMessage(error, content.auth.networkError),
+      }
     }
-
-    const profileUser = await loadProfileForUser(data.user)
-    setCurrentUser(profileUser)
-    return { success: true }
   }
 
   const handleSignup = async (formData) => {
-    let guideId
+    try {
+      let guideId
 
-    if (formData.role === 'guide') {
-      const baseId = slugify(formData.name)
-      guideId = guidesById[baseId] ? `${baseId}-${guides.length + 1}` : baseId
-    }
+      if (formData.role === 'guide') {
+        const baseId = slugify(formData.name)
+        guideId = guidesById[baseId] ? `${baseId}-${guides.length + 1}` : baseId
+      }
 
-    const { data, error } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-      options: {
-        data: {
-          name: formData.name,
-          phone: formData.phone,
-          role: formData.role,
-          guideId,
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            name: formData.name,
+            phone: formData.phone,
+            role: formData.role,
+            guideId,
+          },
         },
-      },
-    })
-
-    if (error) {
-      return { success: false, message: error.message }
-    }
-
-    const profilePayload = {
-      id: data.user?.id,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      role: formData.role,
-      guide_id: guideId ?? null,
-    }
-
-    if (data.user?.id) {
-      const { error: profileError } = await supabase.from('profiles').upsert([profilePayload])
-
-      if (profileError) {
-        console.error(profileError)
-        return { success: false, message: profileError.message }
-      }
-    }
-
-    if (formData.role === 'guide' && guideId && data.user?.id) {
-      const guidePayload = {
-        id: guideId,
-        profile_id: data.user.id,
-        name: formData.name,
-        image_url:
-          'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=900&q=80',
-        story:
-          'Estoy empezando mi camino como guía en Circular, ofreciendo encuentros sensibles y bien cuidados para crear comunidad.',
-        experience:
-          'Nueva guía en Circular. Puedes completar esta presentación con tu enfoque y recorrido.',
-        special:
-          'Mis círculos buscan abrir espacios humanos, amables y contemporáneos para compartir desde la autenticidad.',
-        rating: 5,
-        reviews: [],
-      }
-
-      const { data: insertedGuide, error: guideError } = await supabase
-        .from('guides')
-        .upsert([guidePayload])
-        .select()
-        .single()
-
-      if (guideError) {
-        console.error(guideError)
-        return { success: false, message: guideError.message }
-      }
-
-      setGuides((currentGuides) => {
-        const nextGuide = normalizeGuideRecord(insertedGuide)
-        const filteredGuides = currentGuides.filter((guide) => guide.id !== nextGuide.id)
-        return [...filteredGuides, nextGuide]
       })
-    }
 
-    if (data.session?.user) {
-      const profileUser = await loadProfileForUser(data.session.user)
-      setCurrentUser(profileUser)
-    }
+      if (error) {
+        return { success: false, message: error.message }
+      }
 
-    return { success: true, sessionCreated: Boolean(data.session) }
+      const profilePayload = {
+        id: data.user?.id,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        role: formData.role,
+        guide_id: guideId ?? null,
+      }
+
+      if (data.user?.id) {
+        const { error: profileError } = await supabase.from('profiles').upsert([profilePayload])
+
+        if (profileError) {
+          console.error(profileError)
+          return { success: false, message: profileError.message }
+        }
+      }
+
+      if (formData.role === 'guide' && guideId && data.user?.id) {
+        const guidePayload = {
+          id: guideId,
+          profile_id: data.user.id,
+          name: formData.name,
+          image_url:
+            'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=900&q=80',
+          story:
+            'Estoy empezando mi camino como guía en Circular, ofreciendo encuentros sensibles y bien cuidados para crear comunidad.',
+          experience:
+            'Nueva guía en Circular. Puedes completar esta presentación con tu enfoque y recorrido.',
+          special:
+            'Mis círculos buscan abrir espacios humanos, amables y contemporáneos para compartir desde la autenticidad.',
+          rating: 5,
+          reviews: [],
+        }
+
+        const { data: insertedGuide, error: guideError } = await supabase
+          .from('guides')
+          .upsert([guidePayload])
+          .select()
+          .single()
+
+        if (guideError) {
+          console.error(guideError)
+          return { success: false, message: guideError.message }
+        }
+
+        setGuides((currentGuides) => {
+          const nextGuide = normalizeGuideRecord(insertedGuide)
+          const filteredGuides = currentGuides.filter((guide) => guide.id !== nextGuide.id)
+          return [...filteredGuides, nextGuide]
+        })
+      }
+
+      if (data.session?.user) {
+        const profileUser = await loadProfileForUser(data.session.user)
+        setCurrentUser(profileUser)
+      }
+
+      return { success: true, sessionCreated: Boolean(data.session) }
+    } catch (error) {
+      return {
+        success: false,
+        message: getSupabaseErrorMessage(error, content.auth.networkError),
+      }
+    }
   }
 
   const handleLogout = async () => {

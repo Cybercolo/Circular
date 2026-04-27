@@ -94,13 +94,24 @@ function createMockSupabaseClient() {
   }
 }
 
-if (!supabaseUrl || !supabaseKey) {
+function isValidHttpUrl(value) {
+  try {
+    const parsedUrl = new URL(value)
+    return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+const hasValidSupabaseConfig = Boolean(supabaseKey) && isValidHttpUrl(supabaseUrl)
+
+if (!hasValidSupabaseConfig) {
   console.warn(
     'Supabase no configurado: agrega VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY para habilitar auth y base de datos.',
   )
 }
 
 export const supabase =
-  supabaseUrl && supabaseKey
+  hasValidSupabaseConfig
     ? createClient(supabaseUrl, supabaseKey)
     : createMockSupabaseClient()

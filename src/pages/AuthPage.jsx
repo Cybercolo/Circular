@@ -53,11 +53,6 @@ function AuthPage({ content, onLogin, onSignup }) {
                 <p className="text-uppercase small fw-semibold circular-eyebrow mb-2">Circular</p>
                 <h1 className="display-6 fw-semibold circular-heading mb-3">{content.auth.title}</h1>
                 <p className="text-muted mb-4">{content.auth.subtitle}</p>
-                <div className="demo-card rounded-5 p-4">
-                  <p className="fw-semibold mb-2">{content.auth.demoTitle}</p>
-                  <p className="mb-2 small">{content.auth.demoParticipant}</p>
-                  <p className="mb-0 small">{content.auth.demoGuide}</p>
-                </div>
               </div>
 
               <div className="col-lg-7">
@@ -141,8 +136,8 @@ function AuthPage({ content, onLogin, onSignup }) {
                         <div className="d-flex flex-wrap gap-2">
                           <button
                             type="button"
-                            className={`btn rounded-pill ${
-                              formData.role === 'participant' ? 'circular-btn-primary' : 'btn-light'
+                            className={`btn rounded-pill auth-role-button ${
+                              formData.role === 'participant' ? 'auth-role-button-active' : ''
                             }`}
                             onClick={() => handleChange('role', 'participant')}
                           >
@@ -150,8 +145,8 @@ function AuthPage({ content, onLogin, onSignup }) {
                           </button>
                           <button
                             type="button"
-                            className={`btn rounded-pill ${
-                              formData.role === 'guide' ? 'circular-btn-primary' : 'btn-light'
+                            className={`btn rounded-pill auth-role-button ${
+                              formData.role === 'guide' ? 'auth-role-button-active' : ''
                             }`}
                             onClick={() => handleChange('role', 'guide')}
                           >

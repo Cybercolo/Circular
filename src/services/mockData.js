@@ -228,23 +228,3 @@ export const initialCircles = [
     locationDetails: 'Espacio Raíz, centro de Temuco.',
   },
 ]
-
-export const initialAccounts = [
-  {
-    id: 'demo-participante',
-    name: 'Elena Torres',
-    email: 'elena@circular.cl',
-    password: 'circular123',
-    role: 'participant',
-    phone: '+56 9 4567 8910',
-  },
-  {
-    id: 'demo-guia',
-    name: 'Amara Rojas',
-    email: 'amara@circular.cl',
-    password: 'circular123',
-    role: 'guide',
-    guideId: 'amara-rojas',
-    phone: '+56 9 7654 3210',
-  },
-]

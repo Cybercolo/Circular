@@ -119,6 +119,29 @@ a {
   background: linear-gradient(135deg, var(--circular-primary-dark), var(--circular-primary));
 }
 
+.auth-role-button {
+  border: 1px solid rgba(216, 86, 118, 0.12);
+  background: linear-gradient(135deg, rgba(255, 245, 248, 0.96), rgba(255, 235, 241, 0.96));
+  color: var(--circular-text);
+  box-shadow: 0 10px 24px rgba(216, 86, 118, 0.08);
+  transition: all 0.2s ease;
+}
+
+.auth-role-button:hover,
+.auth-role-button:focus {
+  color: var(--circular-text);
+  background: linear-gradient(135deg, rgba(255, 238, 244, 0.98), rgba(255, 223, 233, 0.98));
+}
+
+.auth-role-button-active,
+.auth-role-button-active:hover,
+.auth-role-button-active:focus {
+  border: none;
+  color: #fff;
+  background: linear-gradient(135deg, #d85676, #ef7ca1, #f3a4ba);
+  box-shadow: 0 16px 30px rgba(216, 86, 118, 0.22);
+}
+
 .circular-heading {
   color: var(--circular-text);
   letter-spacing: -0.04em;
@@ -155,8 +178,7 @@ a {
 .map-shell,
 .confirmation-panel,
 .become-guide-card,
-.benefit-item,
-.demo-card {
+.benefit-item {
   background: rgba(255, 255, 255, 0.85);
   border: 1px solid var(--circular-border);
   box-shadow: var(--circular-shadow);
@@ -367,10 +389,6 @@ a {
 .confirmation-panel {
   background: rgba(236, 255, 244, 0.85);
   border-color: rgba(29, 124, 73, 0.12);
-}
-
-.demo-card {
-  background: linear-gradient(135deg, rgba(255, 243, 246, 0.95), rgba(255, 233, 238, 0.95));
 }
 
 .donation-card,

@@ -86,11 +86,10 @@ export const uiText = {
       submitLogin: 'Entrar a mi cuenta',
       submitSignup: 'Crear mi cuenta',
       successSignup: 'Tu cuenta fue creada y ya puedes explorar Circular.',
-      demoTitle: 'Accesos demo',
-      demoParticipant: 'Participante: elena@circular.cl / circular123',
-      demoGuide: 'Guía: amara@circular.cl / circular123',
       invalidLogin: 'No encontramos una cuenta con ese correo y contraseña.',
       existingAccount: 'Ya existe una cuenta con ese correo.',
+      networkError:
+        'No pudimos conectar con Supabase. Revisa tu conexion o la configuracion del proyecto e intentalo nuevamente.',
     },
     dashboard: {
       title: 'Panel de guía',
@@ -232,11 +231,10 @@ export const uiText = {
       submitLogin: 'Login to my account',
       submitSignup: 'Create my account',
       successSignup: 'Your account was created and you can now explore Circular.',
-      demoTitle: 'Demo access',
-      demoParticipant: 'Participant: elena@circular.cl / circular123',
-      demoGuide: 'Guide: amara@circular.cl / circular123',
       invalidLogin: 'We could not find an account with that email and password.',
       existingAccount: 'An account with that email already exists.',
+      networkError:
+        'We could not connect to Supabase. Check your connection or project configuration and try again.',
     },
     dashboard: {
       title: 'Guide dashboard',
