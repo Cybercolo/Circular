@@ -14,9 +14,11 @@ function Navbar({ content, currentUser, language, onToggleLanguage, onLogout }) 
               <NavLink className="nav-link circular-nav-link px-0" to="/explorar">
                 {content.nav.explore}
               </NavLink>
-              <NavLink className="nav-link circular-nav-link px-0" to="/convertirse-guia">
-                {content.nav.becomeGuide}
-              </NavLink>
+              {currentUser?.role !== 'guide' && (
+                <NavLink className="nav-link circular-nav-link px-0" to="/convertirse-guia">
+                  {content.nav.becomeGuide}
+                </NavLink>
+              )}
               {currentUser?.role === 'guide' && (
                 <NavLink className="nav-link circular-nav-link px-0" to="/panel-guia">
                   {content.nav.dashboard}

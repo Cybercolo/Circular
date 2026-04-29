@@ -4,7 +4,7 @@ function HeroSection({ content }) {
   return (
     <section className="hero-shell py-5 py-lg-6">
       <div className="container">
-        <div className="hero-card position-relative overflow-hidden p-4 p-lg-5">
+        <div className="hero-card position-relative overflow-hidden rounded-5 p-4 p-lg-5">
           <div className="hero-background" aria-hidden="true">
             <img src="/hero-hands.png" alt="" className="hero-background-image" />
           </div>

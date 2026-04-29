@@ -102,6 +102,8 @@ export const uiText = {
       orContinueWith: 'o continúa con',
       googleContinue: 'Continuar con Google',
       googleLoading: 'Conectando con Google...',
+      googleWarning:
+        'Por favor, si deseas ingresar como guía, crea una cuenta con esta opción seleccionada en la sección Crear cuenta de esta misma página. Entrar vía Google por primera vez te creará una cuenta de participante por defecto.',
       googleRoleHint: 'Si es tu primera vez, crearemos tu cuenta como {role}.',
       googleError: 'No pudimos iniciar el acceso con Google. Inténtalo nuevamente.',
       successSignup: 'Tu cuenta fue creada y ya puedes explorar Circular.',
@@ -158,6 +160,8 @@ export const uiText = {
     },
     footer:
     'contacto.circular.mujeres@gmail.com',
+    footerDisclaimer:
+      'Esta pagina web esta en su estadio inicial de desarrollo. Gracias por avisar si encuentras errores o por compartir sugerencias de mejora.',
     donation: {
       title: 'Apoya a Circular',
       description:
@@ -268,6 +272,8 @@ export const uiText = {
       orContinueWith: 'or continue with',
       googleContinue: 'Continue with Google',
       googleLoading: 'Connecting to Google...',
+      googleWarning:
+        'If you want to join as a guide, please create an account with that option selected in the Sign up section of this page. Signing in with Google for the first time will create a participant account by default.',
       googleRoleHint: 'If this is your first time, we will create your account as {role}.',
       googleError: 'We could not start Google sign-in. Please try again.',
       successSignup: 'Your account was created and you can now explore Circular.',
@@ -324,6 +330,8 @@ export const uiText = {
     },
     footer:
       'For contact or technical issues: contacto.circular.mujeres@gmail.com',
+    footerDisclaimer:
+      'This website is in its early stage of development. Thank you for reporting bugs or sharing ideas to improve it.',
     donation: {
       title: 'Support Circular',
       description:

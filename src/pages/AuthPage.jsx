@@ -201,6 +201,12 @@ function AuthPage({ content, currentUser, onLogin, onSignup, onGoogleAuth }) {
                     {mode === 'login' && (
                       <>
                         <div className="col-12">
+                          <div className="alert alert-warning rounded-4 mb-0">
+                            {content.auth.googleWarning}
+                          </div>
+                        </div>
+
+                        <div className="col-12">
                           <div className="auth-divider">
                             <span>{content.auth.orContinueWith}</span>
                           </div>

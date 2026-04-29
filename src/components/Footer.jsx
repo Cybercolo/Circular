@@ -25,6 +25,7 @@ function Footer({ content, donationUrl = fallbackPayPalUrl }) {
           <div className="col-lg-12">
             <p className="text-uppercase small fw-semibold circular-eyebrow text-center">Contacto Circular</p>
             <p className="mb-8 text-muted text-center">{content.footer}</p>
+            <p className="small text-muted text-center mb-0">{content.footerDisclaimer}</p>
           </div>
 
         </div>
