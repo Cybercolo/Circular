@@ -18,7 +18,7 @@ function BecomeGuidePage({ content }) {
                 </li>
               ))}
             </ul>
-            <Link className="btn circular-btn-primary rounded-pill px-4 py-3" to="/auth">
+            <Link className="btn circular-btn-primary rounded-pill px-4 py-3" to="/auth?mode=signup&role=guide">
               {content.becomeGuide.cta}
             </Link>
           </div>

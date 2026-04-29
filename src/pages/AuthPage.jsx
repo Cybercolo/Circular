@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 function GoogleIcon() {
   return (
@@ -26,6 +26,7 @@ function GoogleIcon() {
 
 function AuthPage({ content, currentUser, onLogin, onSignup, onGoogleAuth }) {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [mode, setMode] = useState('login')
   const [feedback, setFeedback] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -42,6 +43,22 @@ function AuthPage({ content, currentUser, onLogin, onSignup, onGoogleAuth }) {
       navigate(currentUser.role === 'guide' ? '/panel-guia' : '/perfil', { replace: true })
     }
   }, [currentUser, navigate])
+
+  useEffect(() => {
+    const requestedMode = searchParams.get('mode')
+    const requestedRole = searchParams.get('role')
+
+    if (requestedMode === 'login' || requestedMode === 'signup') {
+      setMode(requestedMode)
+    }
+
+    if (requestedRole === 'participant' || requestedRole === 'guide') {
+      setFormData((current) => ({
+        ...current,
+        role: requestedRole,
+      }))
+    }
+  }, [searchParams])
 
   const handleChange = (field, value) => {
     setFormData((current) => ({
